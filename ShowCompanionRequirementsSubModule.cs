@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using HarmonyLib;
+﻿using HarmonyLib;
 using TaleWorlds.MountAndBlade;
 
 namespace ShowCompanionRequirements
@@ -10,8 +9,6 @@ namespace ShowCompanionRequirements
         protected override void OnSubModuleLoad()
         {
             new Harmony("mod.bannerlord.showcompanionrequirements").PatchAll();
-            ShowCompanionRequirementsVMExtensions.CampaignSystemAssembly = Assembly.LoadFrom("TaleWorlds.CampaignSystem.dll");
-            ShowCompanionRequirementsVMExtensions.SandBoxAssembly = Assembly.LoadFrom("..\\..\\Modules\\SandBox\\bin\\Win64_Shipping_Client\\SandBox.dll");
         }
     }
 }
