@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
@@ -41,8 +42,8 @@ namespace ShowCompanionRequirements
             _allSkillsRequired = null;
             _oneSkillRequired = null;
             List<Type> types = new List<Type>();
-            types.AddRange(AccessTools.GetTypesFromAssembly(ShowCompanionRequirementsHelper.CampaignSystemAssembly));
-            types.AddRange(AccessTools.GetTypesFromAssembly(ShowCompanionRequirementsHelper.SandBoxAssembly));
+            types.AddRange(AccessTools.GetTypesFromAssembly(Assembly.LoadFrom("TaleWorlds.CampaignSystem.dll")));
+            types.AddRange(AccessTools.GetTypesFromAssembly(Assembly.LoadFrom("..\\..\\Modules\\SandBox\\bin\\Win64_Shipping_Client\\SandBox.dll")));
             foreach (Type type in types)
             {
                 if (type == hero.Issue.GetType())
@@ -133,13 +134,13 @@ namespace ShowCompanionRequirements
                 }
             }
         }
-        public static void SetTroopRequirements(int requiredTroopCount, int minimumTier, bool mountedRequired)
+        public static void SetRequiredTroops(int requiredTroopCount, int minimumTier, bool mountedRequired)
         {
             _requiredTroopCount = requiredTroopCount;
             _minimumTier = minimumTier;
             _mountedRequired = mountedRequired;
         }
-        public static void SetSkillRequirements(Dictionary<SkillObject, int> shouldHaveAll, Dictionary<SkillObject, int> shouldHaveOneOfThem)
+        public static void SetRequiredSkills(Dictionary<SkillObject, int> shouldHaveAll, Dictionary<SkillObject, int> shouldHaveOneOfThem)
         {
             _allSkillsRequired = shouldHaveAll;
             _oneSkillRequired = shouldHaveOneOfThem;
