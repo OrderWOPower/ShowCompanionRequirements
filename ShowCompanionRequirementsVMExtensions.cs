@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
@@ -34,103 +33,101 @@ namespace ShowCompanionRequirements
             return codes;
         }
         // Add the issue's duration, required troops, and required companion skills to the issue giver's tooltip.
-        public static void AddCompanionRequirements(TooltipVM tooltipVM, Hero hero)
+        public static void AddCompanionRequirements(TooltipVM tooltipVM, Hero issueGiver)
         {
             _requiredTroopCount = 0;
             _minimumTier = 0;
             _mountedRequired = false;
-            _allSkillsRequired = null;
-            _oneSkillRequired = null;
-            List<Type> types = new List<Type>();
-            types.AddRange(AccessTools.GetTypesFromAssembly(Assembly.LoadFrom("TaleWorlds.CampaignSystem.dll")));
-            types.AddRange(AccessTools.GetTypesFromAssembly(Assembly.LoadFrom("..\\..\\Modules\\SandBox\\bin\\Win64_Shipping_Client\\SandBox.dll")));
-            foreach (Type type in types)
+            IssueBase issue = issueGiver.Issue;
+            if (issue.IsThereAlternativeSolution)
             {
-                if (type == hero.Issue.GetType())
+                List<Hero> companions = new List<Hero>();
+                List<Hero> bestCompanions = new List<Hero>();
+                List<ValueTuple<int, int>> casualtyRates = new List<ValueTuple<int, int>>();
+                List<int> successRates = new List<int>();
+                IssueModel issueModel = Campaign.Current.Models.IssueModel;
+                ValueTuple<int, int> lowestCasualtyRate = new ValueTuple<int, int>();
+                int highestSuccessRate = 0;
+                string bestCompanionNames = null;
+                bool isSpecialType = issue.GetType().Name == "HeadmanVillageNeedsDraughtAnimalsIssue" || issue.GetType().Name == "LandLordTheArtOfTheTradeIssue";
+                foreach (TroopRosterElement troopRosterElement in MobileParty.MainParty.MemberRoster.GetTroopRoster())
                 {
-                    object instance = AccessTools.CreateInstance(type);
-                    bool hasAlternativeSolution = (bool)AccessTools.Property(type, "IsThereAlternativeSolution").GetValue(instance);
-                    if (hasAlternativeSolution)
+                    if (troopRosterElement.Character.IsHero && !troopRosterElement.Character.IsPlayerCharacter && troopRosterElement.Character.HeroObject.CanHaveQuestsOrIssues())
                     {
-                        string suitableCompanions = null;
-                        string skillName = null;
-                        string skillValue = null;
-                        bool isSpecialType = type.Name == "HeadmanVillageNeedsDraughtAnimalsIssue" || type.Name == "LandLordTheArtOfTheTradeIssue";
-                        bool troopsSatisfy = (bool)AccessTools.Method(type, "DoTroopsSatisfyAlternativeSolution").Invoke(instance, new object[] { MobileParty.MainParty.MemberRoster, null });
-                        bool skillsSatisfy = false;
-                        List<TroopRosterElement> list = (from x in MobileParty.MainParty.MemberRoster.GetTroopRoster()
-                                                         where x.Character.IsHero && !x.Character.IsPlayerCharacter && x.Character.HeroObject.CanHaveQuestsOrIssues()
-                                                         select x).ToList<TroopRosterElement>();
-                        for (int i = 0; i < list.Count; i++)
+                        Hero companion = troopRosterElement.Character.HeroObject;
+                        companions.Add(companion);
+                        if (issue.AlternativeSolutionHasCasualties)
                         {
-                            if ((bool)AccessTools.Method(type, "CompanionOrFamilyMemberClickableCondition").Invoke(instance, new object[] { list[i].Character.HeroObject, null }))
-                            {
-                                if (i + 1 != list.Count)
-                                {
-                                    suitableCompanions += list[i].Character.Name.ToString() + ",\n";
-                                }
-                                else
-                                {
-                                    suitableCompanions += list[i].Character.Name.ToString();
-                                }
-                                skillsSatisfy = true;
-                            }
+                            casualtyRates.Add(issueModel.GetCausalityForHero(companion, issue));
                         }
-                        int duration = (int)AccessTools.Property(type, "AlternativeSolutionDurationInDays").GetValue(instance);
-                        int countOfAllSkillsRequired = (_allSkillsRequired != null) ? _allSkillsRequired.Count : 0;
-                        int countOfOneSkillRequired = (_oneSkillRequired != null) ? _oneSkillRequired.Count : 0;
-                        if (isSpecialType)
+                        if (issue.AlternativeSolutionHasFailureRisk)
                         {
-                            _requiredTroopCount = (int)AccessTools.Property(type, "AlternativeSolutionNeededMenCount").GetValue(instance);
-                            _minimumTier = 2;
-                            skillName = DefaultSkills.Trade.Name.ToString();
-                            skillValue = ((int)AccessTools.Property(type, "CompanionRequiredSkillLevel").GetValue(instance)).ToString();
+                            successRates.Add(100 - (int)(issueModel.GetFailureRiskForHero(companion, issue) * 100f));
                         }
-                        tooltipVM.AddProperty("", "(" + hero.Issue.Title.ToString() + ")", 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddColoredProperty("Companion Requirements", "(Summary)", UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                        tooltipVM.AddProperty("Days", duration.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddColoredProperty("Troops", "See below", troopsSatisfy ? UIColors.PositiveIndicator : UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddColoredProperty("Skills", "See below", skillsSatisfy ? UIColors.PositiveIndicator : UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("Troops Required", " ", 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                        tooltipVM.AddProperty("Number", _requiredTroopCount.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("Minimum Tier", _minimumTier.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("Cavalry", _mountedRequired ? "Yes" : "No", 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("Skills Required", "(All of these)", 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                        if (countOfAllSkillsRequired > 0)
-                        {
-                            foreach (KeyValuePair<SkillObject, int> keyValuePair in _allSkillsRequired)
-                            {
-                                skillName = keyValuePair.Key.Name.ToString();
-                                skillValue = keyValuePair.Value.ToString();
-                                tooltipVM.AddProperty(skillName, skillValue, 0, TooltipProperty.TooltipPropertyFlags.None);
-                            }
-                        }
-                        if (isSpecialType && Hero.MainHero.CompanionsInParty.Count() > 0)
-                        {
-                            tooltipVM.AddProperty(skillName, skillValue, 0, TooltipProperty.TooltipPropertyFlags.None);
-                        }
-                        tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("Skills Required", "(One of these)", 0, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                        if (countOfOneSkillRequired > 0)
-                        {
-                            foreach (KeyValuePair<SkillObject, int> keyValuePair in _oneSkillRequired)
-                            {
-                                skillName = keyValuePair.Key.Name.ToString();
-                                skillValue = keyValuePair.Value.ToString();
-                                tooltipVM.AddProperty(skillName, skillValue, 0, TooltipProperty.TooltipPropertyFlags.None);
-                            }
-                        }
-                        tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                        tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
-                        tooltipVM.AddProperty("Suitable Companions", suitableCompanions, 0, TooltipProperty.TooltipPropertyFlags.None);
                     }
+                }
+                if (casualtyRates.Count > 0)
+                {
+                    lowestCasualtyRate = casualtyRates.Min();
+                }
+                if (successRates.Count > 0)
+                {
+                    highestSuccessRate = successRates.Max();
+                }
+                for (int i = 0; i < companions.Count; i++)
+                {
+                    bestCompanions.Add(companions[i]);
+                    if (successRates[i] != highestSuccessRate)
+                    {
+                        bestCompanions.Remove(companions[i]);
+                    }
+                }
+                for (int i = 0; i < bestCompanions.Count; i++)
+                {
+                    if (i + 1 != bestCompanions.Count)
+                    {
+                        bestCompanionNames += bestCompanions[i].Name.ToString() + ",\n";
+                    }
+                    else
+                    {
+                        bestCompanionNames += bestCompanions[i].Name.ToString();
+                    }
+                }
+                if (isSpecialType)
+                {
+                    _requiredTroopCount = issue.GetTotalAlternativeSolutionNeededMenCount();
+                    _minimumTier = 2;
+                }
+                tooltipVM.AddProperty("", "(" + issue.Title.ToString() + ")", 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddColoredProperty("Companion Requirements", "(Summary)", UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
+                tooltipVM.AddProperty("Days", issue.GetTotalAlternativeSolutionDurationInDays().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddColoredProperty("Troops", "See below", issue.DoTroopsSatisfyAlternativeSolution(MobileParty.MainParty.MemberRoster, out _) ? UIColors.PositiveIndicator : UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Skills", "See below", 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Troops Required", " ", 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
+                tooltipVM.AddProperty("Number", _requiredTroopCount.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Minimum Tier", _minimumTier.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Cavalry", _mountedRequired ? "Yes" : "No", 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Skills Required", "(One of these)", 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
+                foreach (SkillObject skillObject in issue.GetAlternativeSolutionRequiredCompanionSkill(out int requiredSkillLevel))
+                {
+                    tooltipVM.AddProperty(skillObject.Name.ToString(), requiredSkillLevel.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                }
+                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Best Companion(s)", bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
+                if (lowestCasualtyRate.Item1 > 0)
+                {
+                    tooltipVM.AddProperty("Projected Casualties", lowestCasualtyRate.Item1 == lowestCasualtyRate.Item2 ? lowestCasualtyRate.Item1.ToString() : lowestCasualtyRate.Item1.ToString() + "-" + lowestCasualtyRate.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                }
+                if (highestSuccessRate > 0)
+                {
+                    tooltipVM.AddProperty("Chance of Success", highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
             }
         }
@@ -140,15 +137,8 @@ namespace ShowCompanionRequirements
             _minimumTier = minimumTier;
             _mountedRequired = mountedRequired;
         }
-        public static void SetRequiredSkills(Dictionary<SkillObject, int> shouldHaveAll, Dictionary<SkillObject, int> shouldHaveOneOfThem)
-        {
-            _allSkillsRequired = shouldHaveAll;
-            _oneSkillRequired = shouldHaveOneOfThem;
-        }
         private static int _requiredTroopCount;
         private static int _minimumTier;
         private static bool _mountedRequired;
-        private static Dictionary<SkillObject, int> _allSkillsRequired;
-        private static Dictionary<SkillObject, int> _oneSkillRequired;
     }
 }
