@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -66,11 +66,11 @@ namespace ShowCompanionRequirements
                         }
                     }
                 }
-                if (casualtyRates.Count > 0)
+                if (casualtyRates.Any())
                 {
                     lowestCasualtyRate = casualtyRates.Min();
                 }
-                if (successRates.Count > 0)
+                if (successRates.Any())
                 {
                     highestSuccessRate = successRates.Max();
                 }
@@ -121,7 +121,7 @@ namespace ShowCompanionRequirements
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("Best Companion(s)", bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
-                if (lowestCasualtyRate.Item1 > 0)
+                if (lowestCasualtyRate.Item2 > 0)
                 {
                     tooltipVM.AddProperty("Projected Casualties", lowestCasualtyRate.Item1 == lowestCasualtyRate.Item2 ? lowestCasualtyRate.Item1.ToString() : lowestCasualtyRate.Item1.ToString() + "-" + lowestCasualtyRate.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
