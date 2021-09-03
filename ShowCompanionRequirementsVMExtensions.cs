@@ -41,7 +41,6 @@ namespace ShowCompanionRequirements
             IssueBase issue = issueGiver.Issue;
             if (issue.IsThereAlternativeSolution)
             {
-                List<Hero> companions = new List<Hero>();
                 List<Hero> bestCompanions = new List<Hero>();
                 List<ValueTuple<int, int>> casualtyRates = new List<ValueTuple<int, int>>();
                 List<int> successRates = new List<int>();
@@ -55,7 +54,7 @@ namespace ShowCompanionRequirements
                     if (troopRosterElement.Character.IsHero && !troopRosterElement.Character.IsPlayerCharacter && troopRosterElement.Character.HeroObject.CanHaveQuestsOrIssues())
                     {
                         Hero companion = troopRosterElement.Character.HeroObject;
-                        companions.Add(companion);
+                        bestCompanions.Add(companion);
                         if (issue.AlternativeSolutionHasCasualties)
                         {
                             casualtyRates.Add(issueModel.GetCausalityForHero(companion, issue));
@@ -74,12 +73,11 @@ namespace ShowCompanionRequirements
                 {
                     highestSuccessRate = successRates.Max();
                 }
-                for (int i = 0; i < companions.Count; i++)
+                foreach (Hero companion in bestCompanions.ToList())
                 {
-                    bestCompanions.Add(companions[i]);
-                    if (successRates[i] != highestSuccessRate)
+                    if (issue.AlternativeSolutionHasFailureRisk && 100 - (int)(issueModel.GetFailureRiskForHero(companion, issue) * 100f) < highestSuccessRate)
                     {
-                        bestCompanions.Remove(companions[i]);
+                        bestCompanions.Remove(companion);
                     }
                 }
                 for (int i = 0; i < bestCompanions.Count; i++)
@@ -119,8 +117,8 @@ namespace ShowCompanionRequirements
                     tooltipVM.AddProperty(skillObject.Name.ToString(), requiredSkillLevel.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty("Best Companion(s)", bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
+                tooltipVM.AddProperty("Best Companion(s)", bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
                 if (lowestCasualtyRate.Item2 > 0)
                 {
                     tooltipVM.AddProperty("Projected Casualties", lowestCasualtyRate.Item1 == lowestCasualtyRate.Item2 ? lowestCasualtyRate.Item1.ToString() : lowestCasualtyRate.Item1.ToString() + "-" + lowestCasualtyRate.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
