@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
@@ -13,33 +12,14 @@ namespace ShowCompanionRequirements
     [HarmonyPatch(typeof(TooltipVMExtensions), "UpdateTooltip", new Type[] { typeof(TooltipVM), typeof(Hero) })]
     public static class ShowCompanionRequirementsVMExtensions
     {
-        // Get the issue giver and find the position in their tooltip to add the companion requirements.
-        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
-            List<CodeInstruction> codesToInsert = new List<CodeInstruction>();
-            int index = 0;
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (codes[i].operand is "str_hero_has_issue")
-                {
-                    index = i + 7;
-                }
-            }
-            codesToInsert.Add(new CodeInstruction(OpCodes.Ldarg_0));
-            codesToInsert.Add(new CodeInstruction(OpCodes.Ldarg_1));
-            codesToInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ShowCompanionRequirementsVMExtensions), "AddCompanionRequirements", new Type[] { typeof(TooltipVM), typeof(Hero) })));
-            codes.InsertRange(index, codesToInsert);
-            return codes;
-        }
         // Add the issue's duration, required troops, and required companion skills to the issue giver's tooltip.
-        public static void AddCompanionRequirements(TooltipVM tooltipVM, Hero issueGiver)
+        public static void Postfix(TooltipVM tooltipVM, Hero hero)
         {
             _requiredTroopCount = 0;
             _minimumTier = 0;
             _mountedRequired = false;
-            IssueBase issue = issueGiver.Issue;
-            if (issue.IsThereAlternativeSolution)
+            IssueBase issue = hero.Issue;
+            if (issue != null && issue.IsThereAlternativeSolution)
             {
                 List<Hero> bestCompanions = new List<Hero>();
                 List<ValueTuple<int, int>> casualtyRates = new List<ValueTuple<int, int>>();
@@ -96,7 +76,6 @@ namespace ShowCompanionRequirements
                     _requiredTroopCount = issue.GetTotalAlternativeSolutionNeededMenCount();
                     _minimumTier = 2;
                 }
-                tooltipVM.AddProperty("", "(" + issue.Title.ToString() + ")", 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddColoredProperty("Companion Requirements", "(Summary)", UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
