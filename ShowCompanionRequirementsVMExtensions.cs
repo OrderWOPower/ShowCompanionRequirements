@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.SandBox.Issues;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
 using TaleWorlds.Core.ViewModelCollection;
@@ -28,7 +29,7 @@ namespace ShowCompanionRequirements
                 ValueTuple<int, int> lowestCasualtyRate = new ValueTuple<int, int>();
                 int highestSuccessRate = 0;
                 string bestCompanionNames = null;
-                bool isSpecialType = issue.GetType().Name == "HeadmanVillageNeedsDraughtAnimalsIssue" || issue.GetType().Name == "LandLordTheArtOfTheTradeIssue";
+                bool isSpecialType = issue.GetType() == typeof(HeadmanVillageNeedsDraughtAnimalsIssueBehavior.HeadmanVillageNeedsDraughtAnimalsIssue) || issue.GetType() == typeof(LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue);
                 foreach (TroopRosterElement troopRosterElement in MobileParty.MainParty.MemberRoster.GetTroopRoster())
                 {
                     if (troopRosterElement.Character.IsHero && !troopRosterElement.Character.IsPlayerCharacter && troopRosterElement.Character.HeroObject.CanHaveQuestsOrIssues())
@@ -77,11 +78,22 @@ namespace ShowCompanionRequirements
                     _minimumTier = 2;
                 }
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddColoredProperty("Companion Requirements", "(Summary)", UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty("Companion Requirements", "(Summary)", 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
                 tooltipVM.AddProperty("Days", issue.GetTotalAlternativeSolutionDurationInDays().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddColoredProperty("Troops", "See below", issue.DoTroopsSatisfyAlternativeSolution(MobileParty.MainParty.MemberRoster, out _) ? UIColors.PositiveIndicator : UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty("Skills", "See below", 0, TooltipProperty.TooltipPropertyFlags.None);
+                if (highestSuccessRate < 50)
+                {
+                    tooltipVM.AddColoredProperty("Skills", "See below", UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
+                }
+                else if (highestSuccessRate >= 50 && highestSuccessRate < 100)
+                {
+                    tooltipVM.AddColoredProperty("Skills", "See below", UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
+                }
+                else
+                {
+                    tooltipVM.AddColoredProperty("Skills", "See below", UIColors.PositiveIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
+                }
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("Troops Required", " ", 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
@@ -102,10 +114,7 @@ namespace ShowCompanionRequirements
                 {
                     tooltipVM.AddProperty("Projected Casualties", lowestCasualtyRate.Item1 == lowestCasualtyRate.Item2 ? lowestCasualtyRate.Item1.ToString() : lowestCasualtyRate.Item1.ToString() + "-" + lowestCasualtyRate.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
-                if (highestSuccessRate > 0)
-                {
-                    tooltipVM.AddProperty("Chance of Success", highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
-                }
+                tooltipVM.AddProperty("Chance of Success", highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
             }
         }
         public static void SetRequiredTroops(int requiredTroopCount, int minimumTier, bool mountedRequired)
