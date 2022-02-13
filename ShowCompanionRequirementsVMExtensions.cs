@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +30,6 @@ namespace ShowCompanionRequirements
                 ValueTuple<int, int> lowestCasualtyRate = new ValueTuple<int, int>();
                 int highestSuccessRate = 0;
                 string bestCompanionNames = null;
-                bool isSpecialType = issue.GetType() == typeof(HeadmanVillageNeedsDraughtAnimalsIssueBehavior.HeadmanVillageNeedsDraughtAnimalsIssue) || issue.GetType() == typeof(LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue);
                 foreach (TroopRosterElement troopRosterElement in MobileParty.MainParty.MemberRoster.GetTroopRoster())
                 {
                     if (troopRosterElement.Character.IsHero && !troopRosterElement.Character.IsPlayerCharacter && troopRosterElement.Character.HeroObject.CanHaveQuestsOrIssues())
@@ -73,7 +72,7 @@ namespace ShowCompanionRequirements
                         bestCompanionNames += bestCompanions[i].Name.ToString();
                     }
                 }
-                if (isSpecialType)
+                if (issue.GetType() == typeof(HeadmanVillageNeedsDraughtAnimalsIssueBehavior.HeadmanVillageNeedsDraughtAnimalsIssue) || issue.GetType() == typeof(LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue))
                 {
                     _requiredTroopCount = issue.GetTotalAlternativeSolutionNeededMenCount();
                     _minimumTier = 2;
