@@ -1,9 +1,12 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.SandBox.Issues;
+using TaleWorlds.CampaignSystem.ComponentInterfaces;
+using TaleWorlds.CampaignSystem.Issues;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Roster;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
 using TaleWorlds.Core.ViewModelCollection;
@@ -14,6 +17,10 @@ namespace ShowCompanionRequirements
     [HarmonyPatch(typeof(TooltipVMExtensions), "UpdateTooltip", new Type[] { typeof(TooltipVM), typeof(Hero) })]
     public static class ShowCompanionRequirementsVMExtensions
     {
+        private static int _requiredTroopCount;
+        private static int _minimumTier;
+        private static bool _mountedRequired;
+
         // Add the issue's duration, required troops, and required companion skills to the issue giver's tooltip.
         public static void Postfix(TooltipVM tooltipVM, Hero hero)
         {
@@ -117,14 +124,12 @@ namespace ShowCompanionRequirements
                 tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements17}Chance of Success").ToString(), highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
             }
         }
+
         public static void SetRequiredTroops(int requiredTroopCount, int minimumTier, bool mountedRequired)
         {
             _requiredTroopCount = requiredTroopCount;
             _minimumTier = minimumTier;
             _mountedRequired = mountedRequired;
         }
-        private static int _requiredTroopCount;
-        private static int _minimumTier;
-        private static bool _mountedRequired;
     }
 }
