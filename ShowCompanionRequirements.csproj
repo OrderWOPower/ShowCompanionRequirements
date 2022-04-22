@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ShowCompanionRequirementsHelper.cs" />
+    <Compile Include="ShowCompanionRequirementsManager.cs" />
     <Compile Include="ShowCompanionRequirementsSubModule.cs" />
     <Compile Include="ShowCompanionRequirementsVMExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

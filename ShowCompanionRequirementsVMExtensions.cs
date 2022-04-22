@@ -17,16 +17,9 @@ namespace ShowCompanionRequirements
     [HarmonyPatch(typeof(TooltipVMExtensions), "UpdateTooltip", new Type[] { typeof(TooltipVM), typeof(Hero) })]
     public static class ShowCompanionRequirementsVMExtensions
     {
-        private static int _requiredTroopCount;
-        private static int _minimumTier;
-        private static bool _mountedRequired;
-
         // Add the issue's duration, required troops, and required companion skills to the issue giver's tooltip.
         public static void Postfix(TooltipVM tooltipVM, Hero hero)
         {
-            _requiredTroopCount = 0;
-            _minimumTier = 0;
-            _mountedRequired = false;
             IssueBase issue = hero.Issue;
             if (issue != null && issue.IsThereAlternativeSolution)
             {
@@ -34,9 +27,11 @@ namespace ShowCompanionRequirements
                 List<ValueTuple<int, int>> casualtyRates = new List<ValueTuple<int, int>>();
                 List<int> successRates = new List<int>();
                 IssueModel issueModel = Campaign.Current.Models.IssueModel;
+                ShowCompanionRequirementsManager manager = ShowCompanionRequirementsManager.Current;
                 ValueTuple<int, int> lowestCasualtyRate = new ValueTuple<int, int>();
                 int highestSuccessRate = 0;
                 string bestCompanionNames = null;
+                bool isSpecialType = issue.GetType() == typeof(HeadmanVillageNeedsDraughtAnimalsIssueBehavior.HeadmanVillageNeedsDraughtAnimalsIssue) || issue.GetType() == typeof(LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue);
                 foreach (TroopRosterElement troopRosterElement in MobileParty.MainParty.MemberRoster.GetTroopRoster())
                 {
                     if (troopRosterElement.Character.IsHero && !troopRosterElement.Character.IsPlayerCharacter && troopRosterElement.Character.HeroObject.CanHaveQuestsOrIssues())
@@ -70,19 +65,7 @@ namespace ShowCompanionRequirements
                 }
                 for (int i = 0; i < bestCompanions.Count; i++)
                 {
-                    if (i + 1 != bestCompanions.Count)
-                    {
-                        bestCompanionNames += bestCompanions[i].Name.ToString() + ",\n";
-                    }
-                    else
-                    {
-                        bestCompanionNames += bestCompanions[i].Name.ToString();
-                    }
-                }
-                if (issue.GetType() == typeof(HeadmanVillageNeedsDraughtAnimalsIssueBehavior.HeadmanVillageNeedsDraughtAnimalsIssue) || issue.GetType() == typeof(LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue))
-                {
-                    _requiredTroopCount = issue.GetTotalAlternativeSolutionNeededMenCount();
-                    _minimumTier = 2;
+                    bestCompanionNames += i + 1 != bestCompanions.Count ? bestCompanions[i].Name.ToString() + ",\n" : bestCompanionNames += bestCompanions[i].Name.ToString();
                 }
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements01}Companion Requirements").ToString(), new TextObject("{=ShowCompanionRequirements02}(Summary)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
@@ -104,9 +87,9 @@ namespace ShowCompanionRequirements
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements07}Troops Required").ToString(), " ", 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements08}Number").ToString(), _requiredTroopCount.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements09}Minimum Tier").ToString(), _minimumTier.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements10}Cavalry").ToString(), _mountedRequired ? new TextObject("{=ShowCompanionRequirements11}Yes").ToString() : new TextObject("{=ShowCompanionRequirements12}No").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements08}Number").ToString(), isSpecialType ? manager.RequiredTroopCount.ToString() : issue.GetTotalAlternativeSolutionNeededMenCount().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements09}Minimum Tier").ToString(), isSpecialType ? manager.MinimumTier.ToString() : "2", 0, TooltipProperty.TooltipPropertyFlags.None);
+                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements10}Cavalry").ToString(), manager.MountedRequired ? new TextObject("{=ShowCompanionRequirements11}Yes").ToString() : new TextObject("{=ShowCompanionRequirements12}No").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements13}Skills Required").ToString(), new TextObject("{=ShowCompanionRequirements14}(One of these)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
@@ -123,13 +106,6 @@ namespace ShowCompanionRequirements
                 }
                 tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements17}Chance of Success").ToString(), highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
             }
-        }
-
-        public static void SetRequiredTroops(int requiredTroopCount, int minimumTier, bool mountedRequired)
-        {
-            _requiredTroopCount = requiredTroopCount;
-            _minimumTier = minimumTier;
-            _mountedRequired = mountedRequired;
         }
     }
 }
