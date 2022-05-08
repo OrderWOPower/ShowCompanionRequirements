@@ -2,9 +2,9 @@
 {
     public class ShowCompanionRequirementsManager
     {
-        private static readonly ShowCompanionRequirementsManager showCompanionRequirementsManager = new ShowCompanionRequirementsManager();
+        private static readonly ShowCompanionRequirementsManager _showCompanionRequirementsManager = new ShowCompanionRequirementsManager();
 
-        public static ShowCompanionRequirementsManager Current => showCompanionRequirementsManager;
+        public static ShowCompanionRequirementsManager Current => _showCompanionRequirementsManager;
 
         public int RequiredTroopCount { get; set; }
 
