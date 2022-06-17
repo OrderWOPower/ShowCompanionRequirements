@@ -9,16 +9,16 @@ using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Roster;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
-using TaleWorlds.Core.ViewModelCollection;
+using TaleWorlds.Core.ViewModelCollection.Information;
 using TaleWorlds.Localization;
 
 namespace ShowCompanionRequirements
 {
-    [HarmonyPatch(typeof(TooltipVMExtensions), "UpdateTooltip", new Type[] { typeof(TooltipVM), typeof(Hero) })]
+    [HarmonyPatch(typeof(PropertyBasedTooltipVMExtensions), "UpdateTooltip", new Type[] { typeof(PropertyBasedTooltipVM), typeof(Hero), typeof(bool) })]
     public static class ShowCompanionRequirementsVMExtensions
     {
         // Add the issue's duration, required troops, and required companion skills to the issue giver's tooltip.
-        public static void Postfix(TooltipVM tooltipVM, Hero hero)
+        public static void Postfix(PropertyBasedTooltipVM propertyBasedTooltipVM, Hero hero)
         {
             IssueBase issue = hero.Issue;
             if (issue != null && issue.IsThereAlternativeSolution)
@@ -46,6 +46,10 @@ namespace ShowCompanionRequirements
                         {
                             successRates.Add(100 - (int)(issueModel.GetFailureRiskForHero(companion, issue) * 100f));
                         }
+                        else
+                        {
+                            highestSuccessRate = 100;
+                        }
                     }
                 }
                 if (casualtyRates.Any())
@@ -67,44 +71,44 @@ namespace ShowCompanionRequirements
                 {
                     bestCompanionNames += i + 1 != bestCompanions.Count ? bestCompanions[i].Name.ToString() + ",\n" : bestCompanionNames += bestCompanions[i].Name.ToString();
                 }
-                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements01}Companion Requirements").ToString(), new TextObject("{=ShowCompanionRequirements02}(Summary)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements03}Days").ToString(), issue.GetTotalAlternativeSolutionDurationInDays().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements04}Troops").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), issue.DoTroopsSatisfyAlternativeSolution(MobileParty.MainParty.MemberRoster, out _) ? UIColors.PositiveIndicator : UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
-                if (highestSuccessRate < 50)
+                propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements01}Companion Requirements").ToString(), new TextObject("{=ShowCompanionRequirements02}(Summary)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements03}Days").ToString(), issue.GetTotalAlternativeSolutionDurationInDays().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements04}Troops").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), issue.DoTroopsSatisfyAlternativeSolution(MobileParty.MainParty.MemberRoster, out _) ? UIColors.PositiveIndicator : UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
+                if (highestSuccessRate == 100)
                 {
-                    tooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements06}Skills").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements06}Skills").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), UIColors.PositiveIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
-                else if (highestSuccessRate >= 50 && highestSuccessRate < 100)
+                else if (highestSuccessRate < 100 && highestSuccessRate >= 50)
                 {
-                    tooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements06}Skills").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements06}Skills").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), UIColors.Gold, 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
                 else
                 {
-                    tooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements06}Skills").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), UIColors.PositiveIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddColoredProperty(new TextObject("{=ShowCompanionRequirements06}Skills").ToString(), new TextObject("{=ShowCompanionRequirements05}See below").ToString(), UIColors.NegativeIndicator, 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
-                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements07}Troops Required").ToString(), " ", 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements08}Number").ToString(), isSpecialType ? manager.RequiredTroopCount.ToString() : issue.GetTotalAlternativeSolutionNeededMenCount().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements09}Minimum Tier").ToString(), isSpecialType ? manager.MinimumTier.ToString() : "2", 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements10}Cavalry").ToString(), manager.MountedRequired ? new TextObject("{=ShowCompanionRequirements11}Yes").ToString() : new TextObject("{=ShowCompanionRequirements12}No").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements13}Skills Required").ToString(), new TextObject("{=ShowCompanionRequirements14}(One of these)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                foreach (SkillObject skillObject in issue.GetAlternativeSolutionRequiredCompanionSkill(out int requiredSkillLevel))
+                propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements07}Troops Required").ToString(), " ", 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements08}Number").ToString(), isSpecialType ? manager.RequiredTroopCount.ToString() : issue.GetTotalAlternativeSolutionNeededMenCount().ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements09}Minimum Tier").ToString(), isSpecialType ? manager.MinimumTier.ToString() : "2", 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements10}Cavalry").ToString(), manager.MountedRequired ? new TextObject("{=ShowCompanionRequirements11}Yes").ToString() : new TextObject("{=ShowCompanionRequirements12}No").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements13}Skills Required").ToString(), new TextObject("{=ShowCompanionRequirements14}(One of these)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
+                foreach (ValueTuple<SkillObject, int> skill in issue.GetAlternativeSolutionRequiredCompanionSkill())
                 {
-                    tooltipVM.AddProperty(skillObject.Name.ToString(), requiredSkillLevel.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddProperty(skill.Item1.ToString(), skill.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
-                tooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
-                tooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements15}Best Companion(s)").ToString(), bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements15}Best Companion(s)").ToString(), bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
                 if (lowestCasualtyRate.Item2 > 0)
                 {
-                    tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements16}Projected Casualties").ToString(), lowestCasualtyRate.Item1 == lowestCasualtyRate.Item2 ? lowestCasualtyRate.Item1.ToString() : lowestCasualtyRate.Item1.ToString() + "-" + lowestCasualtyRate.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements16}Projected Casualties").ToString(), lowestCasualtyRate.Item1 == lowestCasualtyRate.Item2 ? lowestCasualtyRate.Item1.ToString() : lowestCasualtyRate.Item1.ToString() + "-" + lowestCasualtyRate.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 }
-                tooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements17}Chance of Success").ToString(), highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
+                propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements17}Chance of Success").ToString(), highestSuccessRate.ToString() + "%", 0, TooltipProperty.TooltipPropertyFlags.None);
             }
         }
     }
