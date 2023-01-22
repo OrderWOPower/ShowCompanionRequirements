@@ -29,6 +29,7 @@ namespace ShowCompanionRequirements
                 IssueModel issueModel = Campaign.Current.Models.IssueModel;
                 ShowCompanionRequirementsManager manager = ShowCompanionRequirementsManager.Current;
                 ValueTuple<int, int> lowestCasualtyRate = new ValueTuple<int, int>();
+                ValueTuple<SkillObject, int> skill = new ValueTuple<SkillObject, int>();
                 int highestSuccessRate = 0;
                 string bestCompanionNames = null;
                 bool isSpecial = issue is HeadmanVillageNeedsDraughtAnimalsIssueBehavior.HeadmanVillageNeedsDraughtAnimalsIssue || issue is LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue;
@@ -71,6 +72,10 @@ namespace ShowCompanionRequirements
                 {
                     bestCompanionNames += i + 1 != bestCompanions.Count ? bestCompanions[i].Name.ToString() + ",\n" : bestCompanionNames += bestCompanions[i].Name.ToString();
                 }
+                if (bestCompanions.Any())
+                {
+                    skill = issue.GetAlternativeSolutionSkill(bestCompanions.First());
+                }
                 propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements01}Companion Requirements").ToString(), new TextObject("{=ShowCompanionRequirements02}(Summary)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
@@ -97,10 +102,7 @@ namespace ShowCompanionRequirements
                 propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements13}Skills Required").ToString(), new TextObject("{=ShowCompanionRequirements14}(One of these)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
-                foreach (ValueTuple<SkillObject, int> skill in issue.GetAlternativeSolutionRequiredCompanionSkill())
-                {
-                    propertyBasedTooltipVM.AddProperty(skill.Item1.ToString(), skill.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                }
+                propertyBasedTooltipVM.AddProperty(skill.Item1?.ToString(), skill.Item2.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                 propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                 propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.DefaultSeperator);
                 propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements15}Best Companion(s)").ToString(), bestCompanionNames, 0, TooltipProperty.TooltipPropertyFlags.None);
