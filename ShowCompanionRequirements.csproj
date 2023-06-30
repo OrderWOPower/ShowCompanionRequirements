@@ -72,7 +72,7 @@
     <Compile Include="ShowCompanionRequirementsHelper.cs" />
     <Compile Include="ShowCompanionRequirementsManager.cs" />
     <Compile Include="ShowCompanionRequirementsSubModule.cs" />
-    <Compile Include="ShowCompanionRequirementsVMExtensions.cs" />
+    <Compile Include="ShowCompanionRequirementsCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
