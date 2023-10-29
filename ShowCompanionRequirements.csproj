@@ -69,8 +69,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ShowCompanionRequirementsHelper.cs" />
-    <Compile Include="ShowCompanionRequirementsManager.cs" />
     <Compile Include="ShowCompanionRequirementsSubModule.cs" />
     <Compile Include="ShowCompanionRequirementsCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
