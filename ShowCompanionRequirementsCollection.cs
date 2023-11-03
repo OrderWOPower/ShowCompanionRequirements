@@ -18,9 +18,10 @@ namespace ShowCompanionRequirements
     [HarmonyPatch]
     public static class ShowCompanionRequirementsCollection
     {
-        private static int _minimumTier;
-        private static bool _mountedRequired;
+        private static int MinimumTier = 0;
+        private static bool MountedRequired = false;
 
+        [HarmonyAfter(new string[] { "Bannerlord.AllegianceOverhaul" })]
         [HarmonyPostfix]
         [HarmonyPatch(typeof(TooltipRefresherCollection), "RefreshHeroTooltip")]
         public static void Postfix1(string ___ExtendKeyId, PropertyBasedTooltipVM propertyBasedTooltipVM, object[] args)
@@ -128,8 +129,8 @@ namespace ShowCompanionRequirements
                     propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements07}Troops Required").ToString(), " ", 0, TooltipProperty.TooltipPropertyFlags.None);
                     propertyBasedTooltipVM.AddProperty("", "", 0, TooltipProperty.TooltipPropertyFlags.RundownSeperator);
                     propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements08}Number").ToString(), lowestTroopCount.ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
-                    propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements09}Minimum Tier").ToString(), !isSpecial ? _minimumTier.ToString() : "2", 0, TooltipProperty.TooltipPropertyFlags.None);
-                    propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements10}Cavalry").ToString(), !isSpecial && _mountedRequired ? new TextObject("{=ShowCompanionRequirements11}Yes").ToString() : new TextObject("{=ShowCompanionRequirements12}No").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements09}Minimum Tier").ToString(), !isSpecial ? MinimumTier.ToString() : "2", 0, TooltipProperty.TooltipPropertyFlags.None);
+                    propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements10}Cavalry").ToString(), !isSpecial && MountedRequired ? new TextObject("{=ShowCompanionRequirements11}Yes").ToString() : new TextObject("{=ShowCompanionRequirements12}No").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
                     propertyBasedTooltipVM.AddProperty(string.Empty, string.Empty, -1, TooltipProperty.TooltipPropertyFlags.None);
                     // Add the issue's required skills to the issue giver's tooltip.
                     propertyBasedTooltipVM.AddProperty(new TextObject("{=ShowCompanionRequirements13}Skills Required").ToString(), new TextObject("{=ShowCompanionRequirements14}(One of these)").ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
@@ -158,8 +159,8 @@ namespace ShowCompanionRequirements
         [HarmonyPatch(typeof(QuestHelper), "CheckRosterForAlternativeSolution")]
         public static void Postfix2(int minimumTier, bool mountedRequired)
         {
-            _minimumTier = minimumTier;
-            _mountedRequired = mountedRequired;
+            MinimumTier = minimumTier;
+            MountedRequired = mountedRequired;
         }
     }
 }
