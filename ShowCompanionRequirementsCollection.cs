@@ -21,9 +21,9 @@ namespace ShowCompanionRequirements
         private static int MinimumTier = 0;
         private static bool MountedRequired = false;
 
-        [HarmonyAfter(new string[] { "Bannerlord.AllegianceOverhaul" })]
         [HarmonyPostfix]
         [HarmonyPatch(typeof(TooltipRefresherCollection), "RefreshHeroTooltip")]
+        [HarmonyAfter(new string[] { "Bannerlord.AllegianceOverhaul" })]
         public static void Postfix1(string ___ExtendKeyId, PropertyBasedTooltipVM propertyBasedTooltipVM, object[] args)
         {
             IssueBase issue = ((Hero)args[0]).Issue;
