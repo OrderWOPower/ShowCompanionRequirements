@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<base xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" type="string">
+  <tags>
+    <tag language="English" />
+  </tags>
+  <strings>
+    <string id="ShowCompanionRequirements01" text="Companion Requirements" />
+    <string id="ShowCompanionRequirements02" text="(Summary)" />
+    <string id="ShowCompanionRequirements03" text="Days" />
+    <string id="ShowCompanionRequirements04" text="Troops" />
+    <string id="ShowCompanionRequirements05" text="See below" />
+    <string id="ShowCompanionRequirements06" text="Skills" />
+    <string id="ShowCompanionRequirements07" text="Troops Required" />
+    <string id="ShowCompanionRequirements08" text="Number" />
+    <string id="ShowCompanionRequirements09" text="Minimum Tier" />
+    <string id="ShowCompanionRequirements10" text="Cavalry" />
+    <string id="ShowCompanionRequirements11" text="Yes" />
+    <string id="ShowCompanionRequirements12" text="No" />
+    <string id="ShowCompanionRequirements13" text="Skills Required" />
+    <string id="ShowCompanionRequirements14" text="(One of these)" />
+    <string id="ShowCompanionRequirements15" text="Best Companion(s)" />
+    <string id="ShowCompanionRequirements16" text="Projected Casualties" />
+    <string id="ShowCompanionRequirements17" text="Chance of Success" />
+  </strings>
+</base>
