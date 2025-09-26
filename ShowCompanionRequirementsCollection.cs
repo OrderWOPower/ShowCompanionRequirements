@@ -48,7 +48,7 @@ namespace ShowCompanionRequirements
                     string namesOfBestCompanions = null;
                     bool isSpecial = issue is LandLordTheArtOfTheTradeIssueBehavior.LandLordTheArtOfTheTradeIssue;
 
-                    foreach (TroopRosterElement troopRosterElement in MobileParty.MainParty.MemberRoster.GetTroopRoster().Where(e => e.Character.IsHero && !e.Character.IsPlayerCharacter && e.Character.HeroObject.CanHaveQuestsOrIssues()))
+                    foreach (TroopRosterElement troopRosterElement in MobileParty.MainParty.MemberRoster.GetTroopRoster().Where(e => e.Character.IsHero && !e.Character.IsPlayerCharacter && e.Character.HeroObject.CanHaveCampaignIssues()))
                     {
                         Hero companion = troopRosterElement.Character.HeroObject;
                         ValueTuple<SkillObject, int> skill = issueModel.GetIssueAlternativeSolutionSkill(companion, issue);
