@@ -23,7 +23,6 @@ namespace ShowCompanionRequirements
 
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(TooltipRefresherCollection), "RefreshHeroTooltip")]
-		[HarmonyAfter(new string[] { "Bannerlord.AllegianceOverhaul" })]
 		public static void Postfix1(string ___ExtendKeyId, PropertyBasedTooltipVM propertyBasedTooltipVM, object[] args)
 		{
 			IssueBase issue = ((Hero)args[0]).Issue;
