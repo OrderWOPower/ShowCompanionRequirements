@@ -23,7 +23,7 @@ namespace ShowCompanionRequirements
 
 		[HarmonyPostfix]
 		[HarmonyPatch(typeof(TooltipRefresherCollection), "RefreshHeroTooltip")]
-		public static void Postfix1(string ___ExtendKeyId, PropertyBasedTooltipVM propertyBasedTooltipVM, object[] args)
+		public static void Postfix1(PropertyBasedTooltipVM propertyBasedTooltipVM, object[] args)
 		{
 			IssueBase issue = ((Hero)args[0]).Issue;
 
@@ -32,7 +32,7 @@ namespace ShowCompanionRequirements
 				if (!propertyBasedTooltipVM.IsExtended)
 				{
 					propertyBasedTooltipVM.AddProperty("", "", -1, TooltipProperty.TooltipPropertyFlags.None);
-					GameTexts.SetVariable("EXTEND_KEY", propertyBasedTooltipVM.GetKeyText(___ExtendKeyId));
+					GameTexts.SetVariable("EXTEND_KEY", propertyBasedTooltipVM.GetKeyText("ExtendModifier"));
 					propertyBasedTooltipVM.AddProperty("", GameTexts.FindText("str_map_tooltip_info", null).ToString(), 0, TooltipProperty.TooltipPropertyFlags.None);
 				}
 				else
